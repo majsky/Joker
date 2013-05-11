@@ -1,2 +1,3 @@
-Jocker
+Joker
 ======
+Joker card game
