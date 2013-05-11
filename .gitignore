@@ -4,3 +4,13 @@
 *.jar
 *.war
 *.ear
+
+# Ant files #
+build/
+build.num
+
+# gedit stuff #
+*.*~
+
+# slick library #
+lib/

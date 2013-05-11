@@ -1,0 +1,93 @@
+<project name="Joker" basedir="." default="main">
+
+    <property name="src.dir.client" value="src/me/majsky/joker/client"/>
+    <property name="src.dir.common" value="src/me/majsky/joker/common"/>
+    <property name="src.dir.server" value="src/me/majsky/joker/server"/>
+    <property name="src.dir.net" value="src/me/majsky/networking"/>
+    
+    <property name="cp" value="lib/lwjgl.jar;lib/lwjgl_util.jar;lib/slick.jar;"/>
+    <path id="classpath">
+        <fileset dir="lib" includes="**/*.jar"/>
+    </path>
+
+    <property name="build.dir" value="build"/>
+    <property name="classes.dir" value="${build.dir}/classes"/>
+    <property name="jar.dir" value="${build.dir}/jar"/>
+
+    <property name="main.class.client" value="me.majsky.joker.client.JokerClient"/>
+    <property name="main.class.server" value="me.majsky.joker.server.JokerServer"/>
+
+    <property file="version.num"/>
+    <buildnumber file="build.num"/>
+
+    <target name="clean">
+        <delete dir="${classes.dir}"/>
+	    <delete dir="${build.dir}/src"/>
+    </target>
+
+    <target name="compile" depends="clean">
+        <mkdir dir="${classes.dir}/client"/>
+        <mkdir dir="${classes.dir}/server"/>
+	    <mkdir dir="${build.dir}/src/client"/>
+	    <copy todir="${build.dir}/src/client">
+	        <fileset dir="${src.dir.client}"/>
+	        <fileset dir="${src.dir.common}"/>
+	        <fileset dir="${src.dir.net}"/>
+	    </copy>
+        <javac srcdir="${build.dir}/src/client" destdir="${classes.dir}/client" classpath="${cp}" includeantruntime="false"/>
+        
+        <mkdir dir="${build.dir}/src/server"/>
+        <copy todir="${build.dir}/src/server">
+            <fileset dir="${src.dir.server}"/>
+	        <fileset dir="${src.dir.common}"/>
+	        <fileset dir="${src.dir.net}"/>
+        </copy>
+        <javac srcdir="${build.dir}/src/server" destdir="${classes.dir}/server" classpath="${cp}" includeantruntime="false"/>
+        
+    </target>
+
+    <target name="jar" depends="compile">
+        <mkdir dir="${jar.dir}"/>
+        <mkdir dir="${jar.dir}/client"/>
+        <jar destfile="${jar.dir}/client/${ant.project.name}_client_v${version.num}b${build.number}.jar" basedir="${classes.dir}/client">
+            <manifest>
+                <attribute name="Main-Class" value="${main.class.client}"/>
+	        	<attribute name="Implementation-Version" value="${version.num}-b${build.number}"/>
+            </manifest>
+        </jar>
+        <mkdir dir="${jar.dir}/server"/>
+        <jar destfile="${jar.dir}/server/${ant.project.name}_server_v${version.num}b${build.number}.jar" basedir="${classes.dir}/server">
+            <manifest>
+                <attribute name="Main-Class" value="${main.class.server}"/>
+                <attribute name="Implementation-Version" value="${version.num}-b${build.number}"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="runcl" depends="jar">
+	    <record name="${build.dir}/runlog-client.txt" action="start"/>
+        <java fork="true" classname="${main.class.client}"> 
+            <sysproperty key="java.library.path" path="lib/native/linux;"/>
+            <classpath>
+                <path refid="classpath"/>
+                <path location="${jar.dir}/${ant.project.name}_client_v${version.num}b${build.number}.jar"/>
+            </classpath>
+        </java>
+	    <record name="${build.dir}/runlog.txt" action="stop"/>
+    </target>
+    
+    <target name="runsv" depends="jar">
+        <record name="${build.dir}/runlog-server.txt" action="start"/>
+        <java fork="true" classname="${main.class.server}">
+            <classpath>
+                <path refid="classpath"/>
+                <path location="${jar.dir}/server/${ant.project.name}_server_v${version.num}b${build.number}.jar"/>
+            </classpath>
+        </java>
+        <record name="${build.dir}/runlog-server.txt" action="stop"/>
+    </target>
+
+    <target name="main" depends="clean,jar"/>
+
+</project>
+
